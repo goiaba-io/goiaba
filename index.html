@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <meta
+    name="description"
+    content="Goiaba – an open-source ESP32-S3 board for cloud-powered NLP & AIoT"
+  />
+  <title>Goiaba — Cloud-Powered NLP Hardware</title>
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
+
+  <!-- Sticky Header with Logo on Left -->
+  <header class="sticky top-0 z-50 bg-white flex items-center justify-between px-6 py-4 border-b border-gray-200">
+    <a href="#home" class="flex-shrink-0">
+      <img src="imgs/goiaba.png" alt="Goiaba Logo" class="h-10 w-auto"/>
+    </a>
+    <!-- Desktop nav -->
+    <nav class="hidden md:flex space-x-6 mr-[3%]">
+      <a href="#home" class="hover:text-blue-600">Home</a>
+      <a href="#about" class="hover:text-blue-600">About</a>
+      <a href="#features" class="hover:text-blue-600">Features</a>
+      <a href="#license" class="hover:text-blue-600">License</a>
+      <a href="https://github.com/goiaba-io" target="_blank" rel="noopener" class="hover:text-blue-600">GitHub</a>
+    </nav>
+    <!-- Mobile menu button -->
+    <button id="menu-btn" class="md:hidden text-gray-700 focus:outline-none">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- Mobile nav -->
+  <nav id="mobile-menu" class="hidden flex-col space-y-2 px-6 pb-4 md:hidden bg-white border-b border-gray-200">
+    <a href="#home" class="block hover:text-blue-600">Home</a>
+    <a href="#about" class="block hover:text-blue-600">About</a>
+    <a href="#features" class="block hover:text-blue-600">Features</a>
+    <a href="#license" class="block hover:text-blue-600">License</a>
+    <a href="https://github.com/goiaba-io" target="_blank" rel="noopener" class="block hover:text-blue-600">
+      GitHub
+    </a>
+  </nav>
+
+  <main class="pt-16 max-w-3xl mx-auto px-6 py-8 bg-gray-50">
+    <!-- Hero / Home: logo removed here -->
+    <section id="home" class="text-center">
+      <h1 class="text-6xl font-semibold">Goiaba</h1>
+      <p class="text-lg text-gray-600 mt-2">Open-Source Hardware for NLP and AIoT</p>
+      <a href="https://github.com/goiaba-io"
+         class="inline-block mt-4 px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        View on GitHub →
+      </a>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="mt-12">
+      <h2 class="text-2xl font-semibold">What is Goiaba</h2>
+      <p class="mt-4 text-gray-700 leading-relaxed">
+        Goiaba is an open-source hardware development board built around the Espressif ESP32-S3,
+        designed for seamless cloud-powered NLP and AIoT applications. It sports a
+        high-sensitivity MEMS microphone with an I²S audio interface for crystal-clear voice
+        capture, plus an optional speaker output for instant feedback. Audio streams securely over
+        Wi-Fi to your AI agent in real time—enabling on-demand speech recognition, intent detection,
+        and complex data processing without taxing the board itself.
+      </p>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="mt-12">
+      <h2 class="text-2xl font-semibold">Features</h2>
+      <ul class="mt-4 list-disc list-inside space-y-2 text-gray-700">
+        <li>Dual-core ESP32-S3 with neural acceleration</li>
+        <li>High-sensitivity MEMS microphone (I²S)</li>
+        <li>Optional speaker output</li>
+        <li>Wi-Fi &amp; Bluetooth connectivity</li>
+        <li>Camera interface for external camera modules</li>
+        <li>Multiple GPIO pins for sensors and actuators</li>
+      </ul>
+    </section>
+
+    <!-- License -->
+    <section id="license" class="mt-12">
+      <h2 class="text-2xl font-semibold">License</h2>
+      <p class="mt-4 text-gray-700 leading-relaxed">
+        This project is licensed under the
+        <a href="LICENSE" class="text-blue-600 hover:underline">MIT License</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="text-center text-gray-500 py-6">
+    &copy; 2025 Goiaba Project •
+    <a href="https://github.com/goiaba-io" target="_blank" rel="noopener" class="hover:text-blue-600">
+      GitHub
+    </a>
+  </footer>
+
+  <!-- Mobile menu toggle script -->
+  <script>
+    document.getElementById('menu-btn').addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+  </script>
+
+</body>
+</html>
