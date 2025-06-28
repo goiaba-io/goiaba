@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/mqtt@4.1.0/dist/mqtt.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.2/dist/zephyr/bootstrap.min.css"
+    >
+    <title>Goiaba Peer Audio Demo</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-light" data-bs-theme="light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Goiaba Audio Demo</a>
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="https://github.com/goiaba-io/libpeer-demo">GitHub</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <div class="row mb-3">
+        <div class="col-2"><strong>Device ID:</strong></div>
+        <div class="col-6">
+          <input type="text" id="device-id-input" class="form-control" placeholder="fruit-candy-animal">
+        </div>
+        <div class="col-2">
+          <button class="btn btn-secondary" id="gen-id">Generate ID</button>
+        </div>
+        <div class="col-2 text-end">
+          <button class="btn btn-primary" id="connect">Connect</button>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-2"><strong>SIGNALING_URL:</strong></div>
+        <div class="col-8"><span id="device-url"></span></div>
+        <div class="col-2"><strong>Status:</strong> <span id="status">Disconnected</span></div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="p-3 border bg-light text-center">
+            <h5>Remote Audio</h5>
+            <audio id="remote-audio" controls autoplay style="width:100%"></audio>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function getRandomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+      function generateRandomId() {
+        const fruits  = ['apple','banana','cherry','grape','mango'];
+        const candies = ['chocolate','gummy','licorice','toffee','caramel'];
+        const animals = ['lion','tiger','panda','fox','rabbit'];
+        return [getRandomItem(fruits), getRandomItem(candies), getRandomItem(animals)].join('-');
+      }
+
+      // MQTT for signaling
+      const client = mqtt.connect('wss://libpeer.com:8084/mqtt');
+      client.on('connect', () => {
+        document.getElementById('status').textContent = 'MQTT connected';
+        if (window.resultTopic) client.subscribe(window.resultTopic);
+      });
+
+      // WebRTC peer connection
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+      let localStream;
+
+      pc.ontrack = ({ track, streams }) => {
+        if (track.kind === 'audio') {
+          const remoteAudio = document.getElementById('remote-audio');
+          // attach the incoming audio stream
+          remoteAudio.srcObject = streams[0];
+        }
+      };
+
+      pc.onicegatheringstatechange = () => {
+        if (pc.iceGatheringState === 'complete') {
+          client.publish(window.invokeTopic, JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'answer',
+            params: pc.localDescription.sdp,
+            id: answerId
+          }));
+        }
+      };
+
+      // signal IDs
+      const offerId  = Math.floor(Math.random() * 1e6);
+      const answerId = Math.floor(Math.random() * 1e6);
+
+      client.on('message', (_, buf) => {
+        const msg = JSON.parse(buf.toString());
+        if (msg.id !== offerId) return;
+        pc.setRemoteDescription({ type: 'offer', sdp: msg.result });
+        document.getElementById('status').textContent = 'Creating answer…';
+        pc.createAnswer()
+          .then(ans => pc.setLocalDescription(ans))
+          .then(() => {
+            document.getElementById('status').textContent = 'Connected!';
+          });
+      });
+
+      // device ID management
+      function updateDeviceId(id) {
+        if (window.resultTopic && client.connected) {
+          client.unsubscribe(window.resultTopic);
+        }
+        window.deviceId    = id;
+        window.resultTopic = `/public/${id}/result`;
+        window.invokeTopic = `/public/${id}/invoke`;
+        document.getElementById('device-url').textContent =
+          `mqtts://libpeer.com/public/${id}`;
+        if (client.connected) client.subscribe(window.resultTopic);
+      }
+
+      const idInput = document.getElementById('device-id-input');
+      idInput.addEventListener('input', () => {
+        const v = idInput.value.trim();
+        if (v) updateDeviceId(v);
+      });
+      document.getElementById('gen-id').onclick = () => {
+        const id = generateRandomId();
+        idInput.value = id;
+        updateDeviceId(id);
+      };
+
+      document.getElementById('connect').onclick = async () => {
+        const id = idInput.value.trim();
+        if (!id) return alert('Please enter a device ID');
+        updateDeviceId(id);
+
+        // get mic audio and add to peer
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          localStream.getAudioTracks().forEach(t => pc.addTrack(t, localStream));
+        } catch (err) {
+          return alert('Microphone access denied: ' + err.message);
+        }
+
+        client.publish(window.invokeTopic, JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'offer',
+          id: offerId
+        }));
+        document.getElementById('status').textContent = 'Waiting for offer...';
+      };
+
+      // initialize
+      window.onload = () => {
+        const params  = new URLSearchParams(location.search);
+        const id      = params.get('id') || generateRandomId();
+        idInput.value = id;
+        updateDeviceId(id);
+      };
+    </script>
+  </body>
+</html>
