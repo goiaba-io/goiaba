@@ -149,7 +149,42 @@
       </div>
     </section>
 
-    <section id="license" class="mt-12">
+    <section id="newsletter" class="mt-12">
+      <h2 class="text-2xl font-semibold mb-4">Newsletter</h2>
+      <p class="mt-4 text-gray-700 leading-relaxed text-justify">
+        Deixe seu e-mail para receber notícias do projeto Goiaba.
+      </p>
+      <form id="newsletter-form"
+            action="https://formspree.io/f/mwprprlv"
+            method="POST"
+            novalidate
+            class="grid gap-3 mt-[8px]">
+        <input id="email" name="email" type="email" required
+              placeholder="voce@exemplo.com"
+              autocomplete="email"
+              class="py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+        <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="display:none">
+
+        <label class="flex gap-0.5 items-start text-sm leading-6 mt-[4px]">
+          <input id="consent" type="checkbox" class="mt-[5px]" required>
+          <span>
+            Aceito receber e-mails sobre novidades e lançamentos. Posso cancelar a qualquer momento.
+            <a href="/privacidade.html" class="text-blue-600 hover:underline">Política de Privacidade</a>
+          </span>
+        </label>
+
+        <button id="submitBtn" type="submit"
+                disabled
+                class="py-2 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+          Assinar
+        </button>
+
+        <p id="status" role="status" aria-live="polite" class="min-h-[1.25rem] m-0 text-sm"></p>
+      </form>
+    </section>
+
+    <section id="license" class="mt-12" style="margin-top: 10px;">
       <h2 class="text-2xl font-semibold">Licença</h2>
       <p class="mt-4 text-gray-700 leading-relaxed justify-center">
         Este projeto está licenciado sob a
@@ -169,6 +204,81 @@
     document.getElementById('menu-btn').addEventListener('click', () => {
       document.getElementById('mobile-menu').classList.toggle('hidden');
     });
+  </script>
+
+  <script>
+    (function () {
+      const form = document.getElementById('newsletter-form');
+      const email = document.getElementById('email');
+      const consent = document.getElementById('consent');
+      const submitBtn = document.getElementById('submitBtn');
+      const statusEl = document.getElementById('status');
+
+      function updateButtonState() {
+        const ok = consent.checked && email.validity.valid;
+        submitBtn.disabled = !ok;
+        submitBtn.style.cursor = ok ? 'pointer' : 'not-allowed';
+        submitBtn.style.opacity = ok ? '1' : '0.7';
+      }
+
+      email.addEventListener('input', updateButtonState);
+      consent.addEventListener('change', updateButtonState);
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusEl.textContent = '';
+
+        if (!email.value || !email.checkValidity()) {
+          statusEl.textContent = 'Digite um e-mail válido.';
+          statusEl.style.color = '#b91c1c';
+          email.focus();
+          return;
+        }
+        if (!consent.checked) {
+          statusEl.textContent = 'Você precisa aceitar o recebimento de e-mails.';
+          statusEl.style.color = '#b91c1c';
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Enviando...';
+        submitBtn.style.cursor = 'wait';
+
+        try {
+          const formData = new FormData(form);
+          const res = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'Accept': 'application/json' }
+          });
+
+          if (res.ok) {
+            form.reset();
+            updateButtonState();
+            statusEl.textContent = 'Pronto! Verifique seu e-mail para confirmar a inscrição.';
+            statusEl.style.color = '#065f46';
+          } else {
+            let msg = 'Não foi possível enviar agora. Tente novamente mais tarde.';
+            try {
+              const data = await res.json();
+              if (data && data.errors && data.errors.length) {
+                msg = data.errors.map(e => e.message).join(' ');
+              }
+            } catch (_) {}
+            statusEl.textContent = msg;
+            statusEl.style.color = '#b91c1c';
+          }
+        } catch (err) {
+          statusEl.textContent = 'Falha de rede. Verifique sua conexão e tente novamente.';
+          statusEl.style.color = '#b91c1c';
+        } finally {
+          submitBtn.textContent = 'Assinar';
+          updateButtonState();
+        }
+      });
+
+      updateButtonState();
+    })();
   </script>
 
 </body>
